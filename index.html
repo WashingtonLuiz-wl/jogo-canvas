@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nosso Joguinho ❤️</title>
+  <style>
+    canvas {
+      background-color: #87CEEB; /* céu azul */
+      display: block;
+      margin: 0 auto;
+      border: 3px solid #333;
+    }
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: 'Courier New', Courier, monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>❤️ 9 Anos Jogando ao Seu Lado ❤️</h1>
+  <canvas id="gameCanvas" width="640" height="360"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const player = {
+      x: 50,
+      y: 280,
+      width: 30,
+      height: 30,
+      color: '#FF69B4',
+      dy: 0,
+      onGround: true
+    };
+
+    const gravity = 1;
+    const jumpForce = -15;
+
+    const keys = {
+      ArrowRight: false,
+      ArrowLeft: false,
+      Space: false
+    };
+
+    const hearts = [
+      { x: 200, y: 300, collected: false },
+      { x: 400, y: 300, collected: false }
+    ];
+
+    const goal = { x: 580, y: 300, width: 30, height: 30 };
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawHearts() {
+      ctx.fillStyle = 'red';
+      hearts.forEach(h => {
+        if (!h.collected) ctx.fillRect(h.x, h.y, 20, 20);
+      });
+    }
+
+    function drawGoal() {
+      ctx.fillStyle = '#FFD700';
+      ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+    }
+
+    function checkCollision(a, b) {
+      return (
+        a.x < b.x + 20 &&
+        a.x + a.width > b.x &&
+        a.y < b.y + 20 &&
+        a.y + a.height > b.y
+      );
+    }
+
+    function checkGoal() {
+      return (
+        player.x < goal.x + goal.width &&
+        player.x + player.width > goal.x &&
+        player.y < goal.y + goal.height &&
+        player.y + player.height > goal.y
+      );
+    }
+
+    function update() {
+      if (keys.ArrowRight) player.x += 5;
+      if (keys.ArrowLeft) player.x -= 5;
+
+      if (!player.onGround) {
+        player.dy += gravity;
+        player.y += player.dy;
+        if (player.y >= 280) {
+          player.y = 280;
+          player.dy = 0;
+          player.onGround = true;
+        }
+      }
+
+      hearts.forEach(h => {
+        if (!h.collected && checkCollision(player, h)) h.collected = true;
+      });
+
+      if (checkGoal()) {
+        alert('🎉 Parabéns pelos 9 anos! Você venceu o jogo do amor! 💖');
+        window.location.reload();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawPlayer();
+      drawHearts();
+      drawGoal();
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'ArrowRight') keys.ArrowRight = true;
+      if (e.code === 'ArrowLeft') keys.ArrowLeft = true;
+      if (e.code === 'Space' && player.onGround) {
+        player.dy = jumpForce;
+        player.onGround = false;
+      }
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.code === 'ArrowRight') keys.ArrowRight = false;
+      if (e.code === 'ArrowLeft') keys.ArrowLeft = false;
+    });
+
+    loop();
+  </script>
+</body>
+</html>
