@@ -1,29 +1,27 @@
 'use client';
 
-import { MoveLeft, MoveRight, Space } from 'lucide-react';
+import { MoveLeft, MoveRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { drawBricks } from '@/components/Bricks';
 import { checkCollision, checkGoal } from '@/components/Collision';
 import { drawGram } from '@/components/Gram';
 import { drawHearts } from '@/components/Heart';
-import {drawBricks} from '@/components/Bricks';
 import { applyGravity, movePlayer, jump } from '@/components/Movements';
 import { phases } from '@/components/Phases';
 import { Player } from '@/components/Player';
 
 export default function Jogo() {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
-  const [phaseData, setPhaseData] = useState(null);
-
-  const [isLoading, setIsLoading] = useState(true);
-
-
-
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return; // evita erro se canvas ainda não estiver disponível
+
     canvas.width = 1024;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     const phase = phases[currentPhaseIndex];
     const player = new Player(50, 280, 29, 44, '/person.png', 6, 29, 44);
@@ -52,13 +50,9 @@ export default function Jogo() {
     const brickImg = new Image();
     brickImg.src = '/brick.png'; // seu arquivo pixel art de tijolo
 
-
-
     const update = () => {
       movePlayer(player, keys, 5);
       applyGravity(player, gravity, 300, phases[currentPhaseIndex]?.bricks);
-
-
 
       // Verifica colisões com os corações
       hearts.forEach(h => {
@@ -100,21 +94,16 @@ export default function Jogo() {
     };
 
     player.image.onload = () => {
-
-      setIsLoading(false)
-
       loop(); // só começa o loop quando a imagem estiver pronta
     };
 
-
-
-    const handleKeyDown = e => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'ArrowRight') keys.ArrowRight = true;
       if (e.code === 'ArrowLeft') keys.ArrowLeft = true;
       if (e.code === 'Space' && player.onGround) jump(player, jumpForce);
     };
 
-    const handleKeyUp = e => {
+    const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'ArrowRight') keys.ArrowRight = false;
       if (e.code === 'ArrowLeft') keys.ArrowLeft = false;
     };
