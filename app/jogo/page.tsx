@@ -1,6 +1,6 @@
 'use client';
 
-import { Indent, MoveLeft, MoveRight } from 'lucide-react';
+import { MoveLeft, MoveRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { drawBricks } from '@/components/Bricks';
@@ -18,7 +18,6 @@ export default function Jogo() {
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionMessage, setTransitionMessage] = useState('');
 
   const frasesRomanticas = [
     'Você é minha fase favorita. ❤️',
@@ -92,7 +91,6 @@ export default function Jogo() {
         const nextIndex = currentPhaseIndex + 1;
 
         if (nextIndex < phases.length) {
-          setTransitionMessage(frasesRomanticas[currentPhaseIndex]);
           setIsTransitioning(true);
 
           // para o loop antes do setTimeout
@@ -222,7 +220,7 @@ export default function Jogo() {
 
       {isTransitioning && (
         <div className="bg-opacity-80 animate-fade absolute inset-0 z-50 flex items-center justify-center bg-black px-4 text-center text-2xl font-semibold text-white">
-          {transitionMessage}
+          {frasesRomanticas[currentPhaseIndex]}
         </div>
       )}
     </div>
