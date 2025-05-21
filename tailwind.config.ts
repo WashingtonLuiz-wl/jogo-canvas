@@ -19,6 +19,16 @@ const config: Config = {
           '2xl': '1400px', // seu limite de largura que definimos
         },
       },
+      animation: {
+        fade: 'fadeInOut 1s ease-in-out',
+      },
+      keyframes: {
+        fadeInOut: {
+          '0%': { opacity: 0 },
+          '50%': { opacity: 1 },
+          '100%': { opacity: 0 },
+        },
+      },
     },
   },
   plugins: [],

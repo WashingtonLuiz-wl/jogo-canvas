@@ -1,6 +1,6 @@
 'use client';
 
-import { MoveLeft, MoveRight } from 'lucide-react';
+import { Indent, MoveLeft, MoveRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { drawBricks } from '@/components/Bricks';
@@ -13,12 +13,27 @@ import { Player } from '@/components/Player';
 
 export default function Jogo() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const requestIdRef = useRef<number | null>(null);
+
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionMessage, setTransitionMessage] = useState('');
+
+  const frasesRomanticas = [
+    'Você é minha fase favorita. ❤️',
+    'Nosso amor não tem game over.',
+    'Você faz meu coração pular mais alto!',
+    'A melhor fase da minha vida é com você.',
+    'Contigo, até os espinhos viram flores.',
+    'Fase nova, amor de sempre. 💖',
+    'Somos o melhor time de todos.',
+    'Te amo até o último nível.',
+  ];
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return; // evita erro se canvas ainda não estiver disponível
+    if (!canvas) return;
 
     canvas.width = 1024;
 
@@ -31,7 +46,6 @@ export default function Jogo() {
     const jumpForce = -15;
     const keys = { ArrowRight: false, ArrowLeft: false };
 
-    // Copia profunda dos corações da fase atual
     const hearts = phase.hearts.map(h => ({
       ...h,
       collected: false,
@@ -46,9 +60,12 @@ export default function Jogo() {
       sprite: '/door.png',
       openSprite: '/door-open.png',
     };
-    let collectedHearts = 0;
 
+    let collectedHearts = 0;
     let allCollected = false;
+
+    const brickImg = new Image();
+    brickImg.src = '/brick.png';
 
     const drawGoal = () => {
       const img = new Image();
@@ -56,14 +73,12 @@ export default function Jogo() {
       ctx.drawImage(img, goal.x, goal.y, goal.width, goal.height);
     };
 
-    const brickImg = new Image();
-    brickImg.src = '/brick.png'; // seu arquivo pixel art de tijolo
-
     const update = () => {
+      if (isTransitioning) return; // para atualizar durante transição
+
       movePlayer(player, keys, 5);
       applyGravity(player, gravity, 300, phases[currentPhaseIndex]?.bricks);
 
-      // Verifica colisões com os corações
       hearts.forEach(h => {
         if (!h.collected && checkCollision(player, h)) {
           h.collected = true;
@@ -77,11 +92,27 @@ export default function Jogo() {
         const nextIndex = currentPhaseIndex + 1;
 
         if (nextIndex < phases.length) {
-          // alert(phases[nextIndex].message);
-          setCurrentPhaseIndex(nextIndex);
-          collectedHearts = 0;
+          setTransitionMessage(frasesRomanticas[currentPhaseIndex]);
+          setIsTransitioning(true);
+
+          // para o loop antes do setTimeout
+          if (requestIdRef.current) {
+            cancelAnimationFrame(requestIdRef.current);
+            requestIdRef.current = null;
+          }
+
+          setTimeout(() => {
+            setCurrentPhaseIndex(nextIndex);
+            setIsTransitioning(false);
+            collectedHearts = 0;
+          }, 1000);
         } else {
           setCompleted(true);
+          // para o loop porque o jogo acabou
+          if (requestIdRef.current) {
+            cancelAnimationFrame(requestIdRef.current);
+            requestIdRef.current = null;
+          }
         }
       }
     };
@@ -105,11 +136,13 @@ export default function Jogo() {
     const loop = () => {
       update();
       draw();
-      requestAnimationFrame(loop);
+      if (!isTransitioning && !completed) {
+        requestIdRef.current = requestAnimationFrame(loop);
+      }
     };
 
     player.image.onload = () => {
-      loop(); // só começa o loop quando a imagem estiver pronta
+      loop();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,18 +159,17 @@ export default function Jogo() {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
 
-    player.image.onload = () => {
-      loop();
-    };
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
+      if (requestIdRef.current) {
+        cancelAnimationFrame(requestIdRef.current);
+      }
     };
-  }, [currentPhaseIndex]);
+  }, [currentPhaseIndex, isTransitioning, completed]);
 
   return (
-    <div className="bg-accent-foreground flex h-screen flex-col items-center justify-center gap-4 text-white">
+    <div className="bg-accent-foreground relative flex h-screen flex-col items-center justify-center gap-4 text-white">
       {!completed ? (
         <>
           <h1 className="text-5xl text-white">
@@ -185,6 +217,12 @@ export default function Jogo() {
           >
             Jogar novamente
           </button>
+        </div>
+      )}
+
+      {isTransitioning && (
+        <div className="bg-opacity-80 animate-fade absolute inset-0 z-50 flex items-center justify-center bg-black px-4 text-center text-2xl font-semibold text-white">
+          {transitionMessage}
         </div>
       )}
     </div>
