@@ -13,7 +13,9 @@ import { Player } from '@/components/Player';
 
 export default function Jogo() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(8);
+  const [completed, setCompleted] = useState(false);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return; // evita erro se canvas ainda não estiver disponível
@@ -30,7 +32,13 @@ export default function Jogo() {
     const keys = { ArrowRight: false, ArrowLeft: false };
 
     // Copia profunda dos corações da fase atual
-    const hearts = phase.hearts.map(h => ({ ...h, collected: false }));
+    const hearts = phase.hearts.map(h => ({
+      ...h,
+      collected: false,
+      scale: 1,
+      scaleDirection: 1,
+    }));
+
     const goal = {
       ...phase.goal,
       width: 64,
@@ -38,6 +46,7 @@ export default function Jogo() {
       sprite: '/door.png',
       openSprite: '/door-open.png',
     };
+    let collectedHearts = 0;
 
     let allCollected = false;
 
@@ -58,6 +67,7 @@ export default function Jogo() {
       hearts.forEach(h => {
         if (!h.collected && checkCollision(player, h)) {
           h.collected = true;
+          collectedHearts += 1;
         }
       });
 
@@ -69,9 +79,9 @@ export default function Jogo() {
         if (nextIndex < phases.length) {
           // alert(phases[nextIndex].message);
           setCurrentPhaseIndex(nextIndex);
+          collectedHearts = 0;
         } else {
-          alert('🎉 Parabéns pelos 9 anos! Você venceu o jogo do amor! 💖');
-          window.location.reload();
+          setCompleted(true);
         }
       }
     };
@@ -85,6 +95,11 @@ export default function Jogo() {
       player.draw(ctx);
       drawHearts(ctx, hearts);
       drawGoal();
+
+      ctx.fillStyle = 'white';
+      ctx.font = '20px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`❤️ ${collectedHearts} / ${phase.hearts.length}`, 10, 30);
     };
 
     const loop = () => {
@@ -123,33 +138,55 @@ export default function Jogo() {
 
   return (
     <div className="bg-accent-foreground flex h-screen flex-col items-center justify-center gap-4 text-white">
-      <h1 className="text-5xl text-white">❤️ 9 Anos Jogando ao Seu Lado ❤️</h1>
-      <canvas
-        ref={canvasRef}
-        width={1024}
-        height={360}
-        style={{ border: '3px solid #333', backgroundColor: '#87CEEB' }}
-      />
+      {!completed ? (
+        <>
+          <h1 className="text-5xl text-white">
+            ❤️ Fase {currentPhaseIndex + 1}❤️
+          </h1>
+          <canvas
+            ref={canvasRef}
+            width={1024}
+            height={360}
+            style={{ border: '3px solid #333', backgroundColor: '#87CEEB' }}
+          />
 
-      <div className="flex w-[640px] flex-col gap-2">
-        <h2 className="text-lg font-bold">Controles:</h2>
+          <div className="flex w-[1024px] flex-col gap-2">
+            <h2 className="text-lg font-bold">Controles:</h2>
 
-        <div className="flex flex-row gap-16">
-          <div className="flex flex-col justify-between">
-            <span className="text-base font-medium">Movimentar:</span>
-            <div className="flex flex-row gap-8">
-              <MoveLeft /> <MoveRight />
+            <div className="flex flex-row gap-16">
+              <div className="flex flex-col justify-between">
+                <span className="text-base font-medium">Movimentar:</span>
+                <div className="flex flex-row gap-8">
+                  <MoveLeft /> <MoveRight />
+                </div>
+                <span className="text-sm">Setas esquerda/direita</span>
+              </div>
+
+              <div className="flex flex-col justify-between">
+                <span className="text-base font-medium">Pular:</span>
+                <div className="h-[10px] w-[50px] rounded-xs bg-white"></div>{' '}
+                <span className="text-sm">Barra de espaço</span>
+              </div>
             </div>
-            <span className="text-sm">Setas esquerda/direita</span>
           </div>
-
-          <div className="flex flex-col justify-between">
-            <span className="text-base font-medium">Pular:</span>
-            <div className="h-[10px] w-[50px] rounded-xs bg-white"></div>{' '}
-            <span className="text-sm">Barra de espaço</span>
-          </div>
+        </>
+      ) : (
+        <div className="flex flex-col items-center gap-6 text-center">
+          <h1 className="text-4xl font-bold text-pink-500">
+            🎉 Você venceu o jogo do amor! 💖
+          </h1>
+          <p className="max-w-xl text-xl">
+            Foram 9 fases, cada uma representando um ano de uma linda história a
+            dois. Que venham muitos outros níveis pela frente. Te amo! 💕
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded bg-pink-500 px-6 py-2 text-lg font-semibold text-white hover:bg-pink-600"
+          >
+            Jogar novamente
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
