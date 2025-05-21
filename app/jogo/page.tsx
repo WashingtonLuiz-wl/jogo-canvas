@@ -13,7 +13,7 @@ import { Player } from '@/components/Player';
 
 export default function Jogo() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(8);
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
